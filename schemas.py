@@ -24,5 +24,5 @@ class ActionSchema(Schema):
     id = fields.Int(required=True)
     description = fields.Str(required=True)
     action = fields.Str(required=True)
-    tag = fields.List(fields.Nested(TagsSchema(), many=True))
+    tag = fields.Nested(TagsSchema, many=True)
     category = fields.Str(required=True)

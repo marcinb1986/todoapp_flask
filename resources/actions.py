@@ -34,15 +34,15 @@ class Actions(MethodView):
     def post(self, request_data):
         print(1)
         print(request_data)
-        action = ActionModel(
-            id=request_data['id'],
-            action=request_data['action'],
-            category=request_data['category'],
-            description=request_data['description'],
-            persons=[PersonModel(name='', last_name='', id=0)],
-            tag=[TagModel(name=t['name'], id=request_data['id'])
-                 for t in request_data['tag']]
-        )
+        # action = ActionModel(
+        #     id=request_data['id'],
+        #     action=request_data['action'],
+        #     category=request_data['category'],
+        #     description=request_data['description'],
+        #     persons=[PersonModel(name='', last_name='', id=0)],
+        #     tag=[TagModel(name=t['name'], id=request_data['id'])
+        #          for t in request_data['tag']]
+        # )
 
         # try:
         #     db.session.add(action)
@@ -50,7 +50,7 @@ class Actions(MethodView):
         # except SQLAlchemyError:
         #     abort(500,message='An error occured while adding action')
 
-        return action
+        return request_data
         # return action
 
     @blp.arguments(ActionsSchema(many=True))
