@@ -1,13 +1,13 @@
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
 import models
 from flask_smorest import Api
 from resources.actions import blp as ActionsBlueprint
 from sqlalchemy import create_engine
 import os
 import sys
+from db import db
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -20,7 +20,7 @@ load_dotenv(os.path.join(project_folder, '.env'))
 # from sqlalchemy import MetaData
 
 
-db = SQLAlchemy()
+# db = SQLAlchemy()
 
 
 def create_app():

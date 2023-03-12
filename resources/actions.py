@@ -1,7 +1,7 @@
 from flask import request, jsonify
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
-from db import actionsDb
+# from db import actionsDb
 from models.action import ActionModel
 from schemas import ActionsSchema, ActionSchema
 from sqlalchemy.exc import SQLAlchemyError
@@ -9,8 +9,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from flask_sqlalchemy import SQLAlchemy
 from pydantic import ValidationError
 import uuid
-# from models.person import PersonModel
-# from models.tag import TagModel
+from db import db
+from models.person import PersonModel
+from models.tag import TagModel
 # from models.action import ActionModel
 
 
@@ -19,27 +20,51 @@ import uuid
 blp = Blueprint('actions', __name__, description="Operation on actions")
 
 
+@blp.route('/actions', methods=['GET'])
+def get_actions():
+    actions = ActionModel.query.all()
+    result = []
+    for action in actions:
+        action_data = {}
+        action_data['id'] = action.id
+        action_data['action'] = action.action
+        action_data['category'] = action.category
+        action_data['description'] = action.description
+        action_data['tag'] = action.tag.name if action.tag else None
+        result.append(action_data)
+    return jsonify(result)
+
+
 @blp.route('/allActions', methods=['POST', 'GET', 'PUT'])
 def add_action():
-    # from models.person import PersonModel
-    # from models.tag import TagModel
-    # from models.action import ActionModel
 
     if request.method == 'POST':
         print(1)
-        id_action = uuid.uuid4()
-        id_tag = uuid.uuid4()
-        id_persons = uuid.uuid4()
+        id_action = str(uuid.uuid4())
+        id_tag = str(uuid.uuid4())
+        id_persons = str(uuid.uuid4())
         try:
             add_action_request = ActionSchema(**request.json)
-            print(add_action_request.dict())
             action_data = add_action_request.dict()
             action_data['id'] = id_action
-            # action_data['persons'] = {'name': '', 'last_name': ''}
-            # action_data['persons']['id'] = id_persons
-            # action_data['tag']['id'] = id_tag
+            name = ''
+            last_name = ''
+            action_data['persons'] = {name: name,
+                                      last_name: last_name, id: id_persons}
+
+            tag_data = action_data.pop('tag')
+            tag_data['id'] = id_tag
+            new_tag = TagModel(**tag_data)
+            print(action_data)
+
+            new_person = PersonModel(action_data.pop('persons'))
+
             new_action = ActionModel(**action_data)
-            print(new_action)
+            new_action.tag = new_tag
+            new_action.persons = new_person
+
+            db.session.add(new_action)
+            db.session.commit()
             return jsonify({'success': True})
         except ValidationError as e:
             return e

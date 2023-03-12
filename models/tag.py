@@ -3,9 +3,9 @@
 # from sqlalchemy.ext.declarative import declarative_base
 
 # Base = declarative_base()
-from flask_sqlalchemy import SQLAlchemy
-from models.action import ActionModel
-db = SQLAlchemy()
+# from flask_sqlalchemy import SQLAlchemy
+# from models.action import ActionModel
+from db import db
 
 # class Tag(Base):
 
@@ -14,6 +14,6 @@ class TagModel(db.Model):
     __tablename__ = 'tags'
 
     id = db.Column(db.String, primary_key=True)
-    name = db.Column(db.String)
-    action_id = db.Column(db.String, db.ForeignKey('actions.id'))
-    action = db.relationship(ActionModel, uselist=False, lazy='dynamic')
+    name = db.Column(db.String(80))
+    action_id = db.Column(db.String, db.ForeignKey('actions.id'), unique=True)
+    # action = db.relationship("ActionModel", uselist=False, lazy='dynamic')

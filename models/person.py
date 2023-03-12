@@ -1,12 +1,12 @@
 # from sqlalchemy import Column, Integer, String, ForeignKey
 # from sqlalchemy.orm import relationship
 # from sqlalchemy.ext.declarative import declarative_base
-
-from flask_sqlalchemy import SQLAlchemy
+from db import db
+# from flask_sqlalchemy import SQLAlchemy
 from models.action import ActionModel
 # Base = declarative_base()
 
-db = SQLAlchemy()
+# db = SQLAlchemy()
 
 # class Person(Base):
 

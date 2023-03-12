@@ -25,7 +25,7 @@ class ActionSchema(BaseModel):
     description: str
     action: str
     category: str
-    # tag: TagSchema
+    tag: TagSchema
 
 
 # class PersonsSchema(Schema):
