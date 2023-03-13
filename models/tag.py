@@ -17,3 +17,10 @@ class TagModel(db.Model):
     name = db.Column(db.String(80))
     action_id = db.Column(db.String, db.ForeignKey('actions.id'), unique=True)
     # action = db.relationship("ActionModel", uselist=False, lazy='dynamic')
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'action_id': self.action_id
+        }

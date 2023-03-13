@@ -40,9 +40,31 @@ def add_action():
 
     if request.method == 'GET':
         actions = ActionModel.query.all()
-        actions_dict = [action.__dict__ for action in actions]
+        actions_dict = [action.serialize() for action in actions]
         for action_dict in actions_dict:
             action_dict.pop('_sa_instance_state', None)
+            tag = TagModel.query.filter_by(action_id=action_dict['id']).first()
+            person = PersonModel.query.filter_by(
+                action_id=action_dict['id']).all()
+            action_dict['tag'] = tag.serialize() if tag else None
+            action_dict['persons'] = [p.serialize()
+                                      for p in person] if person else None
+        # for action in actions:
+        #     action_dict = action.__dict__
+        #     action_dict.pop('_sa_instance_state', None)
+        #     # print(action_dict)
+
+        #     tag = action_dict.pop('tag')
+        #     if tag:
+        #         tag_dict = tag.serialize()
+        #         action_dict['tag'] = tag_dict
+
+        #     persons = action_dict.pop('persons')
+        #     if persons:
+        #         persons_dict = [person.serialize() for person in persons]
+        #         action_dict['persons'] = persons_dict
+
+        #     actions_dict.append(actions_dict)
 
         return jsonify(actions_dict)
 

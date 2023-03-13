@@ -21,3 +21,10 @@ class PersonModel(db.Model):
     action_id = db.Column(db.String, db.ForeignKey('actions.id'))
     action = db.relationship(
         "ActionModel", back_populates='persons')
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'last_name': self.last_name,
+        }

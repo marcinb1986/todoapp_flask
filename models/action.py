@@ -24,3 +24,13 @@ class ActionModel(db.Model):
     # one-to-one relationship
     persons = db.relationship('PersonModel', back_populates="action")
     # one-to-many relationship
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'action': self.action,
+            'category': self.category,
+            'description': self.description,
+            'tag': self.tag.serialize(),
+            'persons': [person.serialize() for person in self.persons]
+        }
