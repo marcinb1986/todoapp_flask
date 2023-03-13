@@ -38,8 +38,15 @@ def get_actions():
 @blp.route('/allActions', methods=['POST', 'GET', 'PUT'])
 def add_action():
 
+    if request.method == 'GET':
+        actions = ActionModel.query.all()
+        actions_dict = [action.__dict__ for action in actions]
+        for action_dict in actions_dict:
+            action_dict.pop('_sa_instance_state', None)
+
+        return jsonify(actions_dict)
+
     if request.method == 'POST':
-        print(1)
         id_action = str(uuid.uuid4())
         id_tag = str(uuid.uuid4())
         id_persons = str(uuid.uuid4())
@@ -49,25 +56,29 @@ def add_action():
             action_data['id'] = id_action
             name = ''
             last_name = ''
-            action_data['persons'] = {name: name,
-                                      last_name: last_name, id: id_persons}
+            person_data = {'name': name,
+                           'last_name': last_name, 'id': id_persons}
+            new_person = PersonModel(**person_data)
+            action_data['persons'] = [new_person]
 
             tag_data = action_data.pop('tag')
             tag_data['id'] = id_tag
             new_tag = TagModel(**tag_data)
-            print(action_data)
-
-            new_person = PersonModel(action_data.pop('persons'))
 
             new_action = ActionModel(**action_data)
             new_action.tag = new_tag
-            new_action.persons = new_person
+            new_action.persons = [new_person]
 
             db.session.add(new_action)
             db.session.commit()
             return jsonify({'success': True})
-        except ValidationError as e:
-            return e
+        except SQLAlchemyError as e:
+            abort(
+                500,
+                message=str(e)
+            )
+        return request.json
+
         # @blp.route('/allActions')
         # class Actions(MethodView):
         #     # @cross_origin()

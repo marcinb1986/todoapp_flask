@@ -3,7 +3,7 @@
 # from sqlalchemy.ext.declarative import declarative_base
 from db import db
 # from flask_sqlalchemy import SQLAlchemy
-from models.action import ActionModel
+# from models.action import ActionModel
 # Base = declarative_base()
 
 # db = SQLAlchemy()
@@ -20,4 +20,4 @@ class PersonModel(db.Model):
     last_name = db.Column(db.String)
     action_id = db.Column(db.String, db.ForeignKey('actions.id'))
     action = db.relationship(
-        ActionModel, back_populates='persons', lazy='dynamic')
+        "ActionModel", back_populates='persons')

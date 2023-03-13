@@ -1,5 +1,5 @@
 from models.tag import TagModel
-from models.person import PersonModel
+# from models.person import PersonModel
 from db import db
 # from flask_sqlalchemy import SQLAlchemy
 import sqlalchemy.dialects.postgresql as postgresql
@@ -22,5 +22,5 @@ class ActionModel(db.Model):
                           uselist=False, lazy=True)
     # tag_id = db.Column(db.String, db.ForeignKey('tags.id'))
     # one-to-one relationship
-    persons = db.relationship(PersonModel, back_populates="action")
+    persons = db.relationship('PersonModel', back_populates="action")
     # one-to-many relationship
