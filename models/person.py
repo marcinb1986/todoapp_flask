@@ -14,7 +14,6 @@ from db import db
 class PersonModel(db.Model):
     __tablename__ = 'persons'
 
-    # id = Column(Integer, primary_key = True)
     id = db.Column(db.String, primary_key=True)
     name = db.Column(db.String)
     last_name = db.Column(db.String)
@@ -26,5 +25,5 @@ class PersonModel(db.Model):
         return {
             'id': self.id,
             'name': self.name,
-            'last_name': self.last_name,
+            'lastName': self.last_name,
         }

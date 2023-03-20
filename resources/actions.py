@@ -1,23 +1,24 @@
+import inspect
 from flask import request, jsonify
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
-# from db import actionsDb
 from models.action import ActionModel
 from schemas import ActionsSchema, ActionSchema
 from sqlalchemy.exc import SQLAlchemyError
-
-from flask_sqlalchemy import SQLAlchemy
-from pydantic import ValidationError
 import uuid
 from db import db
 from models.person import PersonModel
 from models.tag import TagModel
-# from models.action import ActionModel
-
-
-# db = SQLAlchemy()
+import json
 
 blp = Blueprint('actions', __name__, description="Operation on actions")
+
+
+class SetEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, set):
+            return list(obj)
+        return json.JSONEncoder.default(self, obj)
 
 
 @blp.route('/actions', methods=['GET'])
@@ -37,7 +38,6 @@ def get_actions():
 
 @blp.route('/allActions', methods=['POST', 'GET', 'PUT'])
 def add_action():
-
     if request.method == 'GET':
         actions = ActionModel.query.all()
         actions_dict = [action.serialize() for action in actions]
@@ -49,23 +49,6 @@ def add_action():
             action_dict['tag'] = tag.serialize() if tag else None
             action_dict['persons'] = [p.serialize()
                                       for p in person] if person else None
-        # for action in actions:
-        #     action_dict = action.__dict__
-        #     action_dict.pop('_sa_instance_state', None)
-        #     # print(action_dict)
-
-        #     tag = action_dict.pop('tag')
-        #     if tag:
-        #         tag_dict = tag.serialize()
-        #         action_dict['tag'] = tag_dict
-
-        #     persons = action_dict.pop('persons')
-        #     if persons:
-        #         persons_dict = [person.serialize() for person in persons]
-        #         action_dict['persons'] = persons_dict
-
-        #     actions_dict.append(actions_dict)
-
         return jsonify(actions_dict)
 
     if request.method == 'POST':
@@ -99,7 +82,123 @@ def add_action():
                 500,
                 message=str(e)
             )
-        return request.json
+
+    if request.method == 'PUT':
+        data = request.json
+        # print(f"data:{data}")
+        actions_schema = ActionsSchema()
+        try:
+            actions_data = actions_schema.parse_obj(data)
+        except ValueError as e:
+            return jsonify({'error': str(e)}), 400
+
+        try:
+            actions = ActionModel.query.all()
+            actions_dict = [action.serialize() for action in actions]
+            changed_ids = []
+            for d in data:
+                if d not in actions_dict:
+                    changed_ids.append(d['id'])
+
+            filtered_actions = []
+            for id in changed_ids:
+                filtered_action = ActionModel.query.filter(
+                    ActionModel.id == id).first()
+                if filtered_action:
+                    filtered_actions.append(filtered_action.serialize())
+
+            # print(f"filtered actions: {filtered_actions}")
+            for filtered_action in filtered_actions:
+                action = ActionModel.query.get_or_404(filtered_action['id'])
+                if action:
+                    action.action = filtered_action['action']
+                    action.category = filtered_action['category']
+                    action.description = filtered_action['description']
+                    action.tag.name = filtered_action['tag']['name']
+
+                    if filtered_action['tag']:
+                        if action.tag:
+                            action.tag.name = filtered_action['tag']['name']
+
+                    for d in data:
+                        if d['id'] == filtered_action['id']:
+                            for person in d['persons']:
+                                print(f"person:{person}")
+                                action.persons.name = person['name']
+                                action.persons.last_name = person['lastName']
+                    print(action)
+                    # print(f"filtered_action:{filtered_action}")
+                    # for person in filtered_action['persons']:
+                    #     # print(F"person:{person}")
+                    #     person_data = next(
+                    #         (d for d in data if d['id'] == person['id']), None)
+                    #     # print(
+                    #     #     f"d['id']={d['id']}, person['id']={person['id']}")
+                    #     # print(person_data)
+                    #     if person_data:
+                    #         person_obj = PersonModel.query.get_or_404(
+                    #             person['id'])
+                    #         person_obj.name = person.data['name']
+                    #         person_obj.last_name = person_data['last_name']
+
+                    db.session.add(action)
+                    db.session.commit()
+                    # else:
+                    #     persons = PersonModel(
+                    #         id=filtered_action['persons']['id'],
+                    #         name=filtered_action['persons']['name'],
+                    #         last_name=filtered_action['persons']['last_name'],
+                    #         action_id=filtered_action['id']
+                    #     )
+                    #     db.session.add(persons)
+
+                    # print(filtered_actions)
+                    # for filtered_action in filtered_actions:
+                    #     act_data = next(
+                    #         (d for d in data if d['id'] == filtered_action['id']), None)
+                    #     update_action(filtered_action, act_data)
+
+            return jsonify({'message': 'Actions updated successfully'}), 200
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
+
+        # changed_ids = []
+        # for d in data:
+        #     if d not in actions_dict:
+        #         changed_ids.append(d['id'])
+
+        # filtered_actions = []
+        # for id in changed_ids:
+        #     filtered_action = ActionModel.query.filter(
+        #         ActionModel.id == id).first()
+        #     if filtered_action:
+        #         filtered_actions.append(filtered_action)
+
+        # for i in range(len(data)):
+        #     if data[i]['id'] in changed_ids:
+        #         modified_action = filtered_actions[changed_ids.index(
+        #             data[i]['id'])]
+        #         modified_action.name = data[i]['name']
+
+        # db.session.commit()
+
+        # filtered_actions_dict = [x.serialize() for x in filtered_actions] // zmiana z ActionModel do tablicy obiektów
+        # print(filtered_actions_dict)
+        #     for action in ActionModel.query.filter(ActionModel.id.in_(changed_ids)):
+        #         request_data_for_action = next(
+        #             filter(lambda d: d['id'] == action.id, request_data), None)
+        #         if request_data_for_action is not None:
+        #             action.attribute_1 = request_data_for_action['attribite_1']
+        #             action.attribute_2 = request_data_for_action['attribute_2']
+        #             # Add code to update tag here
+        #             if 'tag' in request_data_for_action:
+        #                 tag = request_data_for_action['tag']
+        #                 action.tag_id = tag[0]['id']
+        #             db.session.add(action)
+        #     db.session.commit()
+        #     return jsonify({'success': True})
 
         # @blp.route('/allActions')
         # class Actions(MethodView):

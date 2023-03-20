@@ -1,24 +1,30 @@
 # from marshmallow import Schema, fields
-from pydantic import BaseModel, Field
-from typing import List
+from pydantic import BaseModel, validator, Extra
+from typing import List, Optional
 
 
 class PersonsSchema(BaseModel):
-    name: str
-    lastName: str
+    id = str
+    name: Optional[str]
+    lastName: Optional[str]
 
 
 class TagSchema(BaseModel):
-    name: str
+    name: Optional[str]
+    id: str
 
 
-class ActionsSchema(BaseModel):
-    id: int
+class UpdatedActionSchema(BaseModel):
+    id: str
     description: str
     action: str
     category: str
     tag: TagSchema
-    persons: List[PersonsSchema]
+    persons: Optional[List[PersonsSchema]] = None
+
+
+class ActionsSchema(BaseModel):
+    __root__: List[UpdatedActionSchema] = []
 
 
 class ActionSchema(BaseModel):
