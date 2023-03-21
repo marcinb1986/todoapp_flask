@@ -107,56 +107,26 @@ def add_action():
                 if filtered_action:
                     filtered_actions.append(filtered_action.serialize())
 
-            # print(f"filtered actions: {filtered_actions}")
+            print(f"filtered actions: {filtered_actions}")
             for filtered_action in filtered_actions:
                 action = ActionModel.query.get_or_404(filtered_action['id'])
+                # id = filtered_action['id']
                 if action:
-                    action.action = filtered_action['action']
-                    action.category = filtered_action['category']
-                    action.description = filtered_action['description']
-                    action.tag.name = filtered_action['tag']['name']
-
-                    if filtered_action['tag']:
-                        if action.tag:
-                            action.tag.name = filtered_action['tag']['name']
-
                     for d in data:
                         if d['id'] == filtered_action['id']:
-                            for person in d['persons']:
-                                print(f"person:{person}")
-                                action.persons.name = person['name']
-                                action.persons.last_name = person['lastName']
-                    print(action)
-                    # print(f"filtered_action:{filtered_action}")
-                    # for person in filtered_action['persons']:
-                    #     # print(F"person:{person}")
-                    #     person_data = next(
-                    #         (d for d in data if d['id'] == person['id']), None)
-                    #     # print(
-                    #     #     f"d['id']={d['id']}, person['id']={person['id']}")
-                    #     # print(person_data)
-                    #     if person_data:
-                    #         person_obj = PersonModel.query.get_or_404(
-                    #             person['id'])
-                    #         person_obj.name = person.data['name']
-                    #         person_obj.last_name = person_data['last_name']
+                            action.action = d['action']
+                            action.category = d['category']
+                            action.description = d['description']
+                            action.tag.name = d['tag']['name']
 
-                    db.session.add(action)
-                    db.session.commit()
-                    # else:
-                    #     persons = PersonModel(
-                    #         id=filtered_action['persons']['id'],
-                    #         name=filtered_action['persons']['name'],
-                    #         last_name=filtered_action['persons']['last_name'],
-                    #         action_id=filtered_action['id']
-                    #     )
-                    #     db.session.add(persons)
-
-                    # print(filtered_actions)
-                    # for filtered_action in filtered_actions:
-                    #     act_data = next(
-                    #         (d for d in data if d['id'] == filtered_action['id']), None)
-                    #     update_action(filtered_action, act_data)
+                            for person in action.persons:
+                                for single_person in d['persons']:
+                                    if person.id == single_person['id']:
+                                        if person.serialize() != single_person:
+                                            person.name = single_person['name']
+                                            person.last_name = single_person['lastName']
+            db.session.add(action)
+            db.session.commit()
 
             return jsonify({'message': 'Actions updated successfully'}), 200
 
@@ -164,6 +134,13 @@ def add_action():
             db.session.rollback()
             return jsonify({'error': str(e)}), 500
 
+
+@blp.route('/action/<string:actionId>', methods=['GET', 'PUT'])
+def get_action(actionId):
+    if request.method == 'GET':
+        id = actionId
+        action = ActionModel.query.get_or_404(id).serialize()
+        return jsonify(action), 200
         # changed_ids = []
         # for d in data:
         #     if d not in actions_dict:
