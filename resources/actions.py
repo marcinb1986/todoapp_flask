@@ -3,7 +3,7 @@ from flask import request, jsonify
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from models.action import ActionModel
-from schemas import ActionsSchema, ActionSchema
+from schemas import ActionsSchema, ActionSchema, UpdatedActionSchema
 from sqlalchemy.exc import SQLAlchemyError
 import uuid
 from db import db
@@ -135,47 +135,59 @@ def add_action():
             return jsonify({'error': str(e)}), 500
 
 
-@blp.route('/action/<string:actionId>', methods=['GET', 'PUT'])
-def get_action(actionId):
+@blp.route('/action/<string:id>', methods=['GET', 'PUT', 'DELETE'])
+def get_action(id):
     if request.method == 'GET':
-        id = actionId
-        action = ActionModel.query.get_or_404(id).serialize()
-        return jsonify(action), 200
-        # changed_ids = []
-        # for d in data:
-        #     if d not in actions_dict:
-        #         changed_ids.append(d['id'])
+        action = ActionModel.query.get_or_404(id)
+        return jsonify(action.serialize()), 200
 
-        # filtered_actions = []
-        # for id in changed_ids:
-        #     filtered_action = ActionModel.query.filter(
-        #         ActionModel.id == id).first()
-        #     if filtered_action:
-        #         filtered_actions.append(filtered_action)
+    if request.method == 'PUT':
+        data = request.json
 
-        # for i in range(len(data)):
-        #     if data[i]['id'] in changed_ids:
-        #         modified_action = filtered_actions[changed_ids.index(
-        #             data[i]['id'])]
-        #         modified_action.name = data[i]['name']
+        key_to_lookup = 'id'
+        for person in data['persons']:
+            if key_to_lookup not in person:
+                person['id'] = str(uuid.uuid4())
 
-        # db.session.commit()
+        try:
+            UpdatedActionSchema.parse_obj(data)
+        except ValueError as e:
+            return jsonify({'error': str(e)}), 400
 
-        # filtered_actions_dict = [x.serialize() for x in filtered_actions] // zmiana z ActionModel do tablicy obiektów
-        # print(filtered_actions_dict)
-        #     for action in ActionModel.query.filter(ActionModel.id.in_(changed_ids)):
-        #         request_data_for_action = next(
-        #             filter(lambda d: d['id'] == action.id, request_data), None)
-        #         if request_data_for_action is not None:
-        #             action.attribute_1 = request_data_for_action['attribite_1']
-        #             action.attribute_2 = request_data_for_action['attribute_2']
-        #             # Add code to update tag here
-        #             if 'tag' in request_data_for_action:
-        #                 tag = request_data_for_action['tag']
-        #                 action.tag_id = tag[0]['id']
-        #             db.session.add(action)
-        #     db.session.commit()
-        #     return jsonify({'success': True})
+        action = ActionModel.query.get_or_404(id)
+
+        action.action = data['action']
+        action.description = data['description']
+        action.category = data['category']
+        action.tag.name = data['tag']['name'] if 'name' in data['tag'] else None
+
+        payload_ids = set([person['id'] for person in data['persons']])
+        person_action_ids = set([person.serialize()['id']
+                                for person in action.persons])
+
+        for person in action.persons:
+            person_id = person.serialize()['id']
+            if person_id in payload_ids:
+                for d in data['persons']:
+                    if person_id == d['id']:
+                        person.name = d['name']
+                        person.last_ame = d['lastName']
+            else:
+                action.persons.remove(person)
+
+        for d in data['persons']:
+            if d['id'] not in person_action_ids:
+                person = {
+                    'id': d['id'],
+                    'name': d['name'],
+                    'last_name': d['lastName']
+                }
+                new_person = PersonModel(**person)
+                action.persons.append(new_person)
+
+        db.session.add(action)
+        db.session.commit()
+        return jsonify({'message': 'success'})
 
         # @blp.route('/allActions')
         # class Actions(MethodView):
