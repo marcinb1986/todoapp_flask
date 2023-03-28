@@ -189,6 +189,16 @@ def get_action(id):
         db.session.commit()
         return jsonify({'message': 'success'})
 
+    if request.method == 'DELETE':
+        action = ActionModel.query.get_or_404(id)
+        try:
+            db.session.delete(action)
+            db.session.commit()
+            return {'message': 'success'}
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
+
         # @blp.route('/allActions')
         # class Actions(MethodView):
         #     # @cross_origin()

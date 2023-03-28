@@ -12,7 +12,7 @@ class PersonsSchema(BaseModel):
 
 class TagSchema(BaseModel):
     name: Optional[str]
-    id: str
+    id: Optional[str]
 
 
 class UpdatedActionSchema(BaseModel):
