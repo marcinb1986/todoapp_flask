@@ -1,7 +1,6 @@
 # from marshmallow import Schema, fields
-from pydantic import BaseModel, validator, Extra
+from pydantic import BaseModel
 from typing import List, Optional
-import uuid
 
 
 class PersonsSchema(BaseModel):

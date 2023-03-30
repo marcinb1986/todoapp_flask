@@ -1,13 +1,4 @@
-# from sqlalchemy import Column, Integer, String, ForeignKey
-# from sqlalchemy.orm import relationship
-# from sqlalchemy.ext.declarative import declarative_base
-
-# Base = declarative_base()
-# from flask_sqlalchemy import SQLAlchemy
-# from models.action import ActionModel
 from db import db
-
-# class Tag(Base):
 
 
 class TagModel(db.Model):
