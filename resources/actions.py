@@ -1,10 +1,7 @@
-import inspect
 from flask import request, jsonify
-from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from models.action import ActionModel
 from schemas import ActionsSchema, ActionSchema, UpdatedActionSchema
-from login_schemas import LoginRegisterSchema
 from sqlalchemy.exc import SQLAlchemyError
 import uuid
 from db import db
@@ -16,52 +13,11 @@ import json
 blp = Blueprint('actions', __name__, description="Operation on actions")
 
 
-def change_dict(data):
-    renamed_dict = {}
-    for k, v in data.items():
-        if k == 'userName':
-            renamed_dict['user_name'] = v
-        else:
-            renamed_dict[k] = v
-        return renamed_dict
-
-
 class SetEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, set):
             return list(obj)
         return json.JSONEncoder.default(self, obj)
-
-
-@blp.route('/login', methods=['GET', 'POST'])
-def login_user():
-    if request.method == 'POST':
-        data = request.json
-
-        try:
-            LoginRegisterSchema.parse_obj(data)
-            return ({'message': 'success'})
-        except ValueError as e:
-            return jsonify({'error': str(e)}), 400
-
-
-@blp.route('/register', methods=['GET', 'POST'])
-def register_user():
-    if request.method == 'POST':
-        data = request.json
-        id_user = str(uuid.uuid4())
-        data['id'] = id_user
-        renamed_dict = {}
-        new_user_data = change_dict(data)
-        print(renamed_dict)
-        try:
-            LoginRegisterSchema.parse_obj(new_user_data)
-            user_data = RegisterUserModel(**new_user_data)
-            db.session.add(user_data)
-            db.session.commit()
-            return ({'message': 'success'})
-        except ValueError as e:
-            return jsonify({'error': str(e)})
 
 
 @blp.route('/actions', methods=['GET'])

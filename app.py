@@ -1,13 +1,16 @@
+import secrets
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 import models
 from flask_smorest import Api
 from resources.actions import blp as ActionsBlueprint
+from resources.users import blp as UsersBlueprint
 from sqlalchemy import create_engine
 import os
 import sys
 from db import db
+from flask_jwt_extended import JWTManager
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -40,13 +43,17 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///data.db"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.init_app(app)
+    with app.app_context():
+        db.create_all()
     engine = create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
     api = Api(app)
 
-    with app.app_context():
-        db.create_all()
+    app.config['JWT_SECRET_KEY'] = str(
+        secrets.SystemRandom().getrandbits(128))
+    jwt = JWTManager(app)
 
     api.register_blueprint(ActionsBlueprint)
+    api.register_blueprint(UsersBlueprint)
     # http://127.0.0.1:5000/swagger-ui
     return app
 

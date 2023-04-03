@@ -25,3 +25,5 @@ webargs==8.2.0
 Werkzeug==2.2.2
 pydantic
 uuid
+flask-jwt-extended
+passlib
